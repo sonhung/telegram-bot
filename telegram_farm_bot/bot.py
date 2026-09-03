@@ -1,36 +1,34 @@
 import time
 import random
 import pyautogui
+import pygetwindow as gw
 
 pyautogui.PAUSE = 0.2
 
 # --- HÀM CLICK CHẮC CHẮN (CHỐNG TRƯỢT/MẤT FOCUS) ---
 
 def clean_chrome_tabs():
-    """Focus vào Chrome và đóng đúng 3 tab quảng cáo, luôn giữ lại Chrome."""
-    print("\n--- TIẾN HÀNH DỌN DẸP 3 TAB CHROME ---")
+    """Chỉ đóng đúng cửa sổ Google Chrome, an toàn tuyệt đối."""
+    print("\n--- TIẾN HÀNH ĐÓNG CỬA SỔ CHROME ---")
 
-    # 1. Click focus vào vùng Chrome
-    pyautogui.moveTo(250, 250, duration=0.25)
-    pyautogui.click()
+    try:
+        chrome_windows = gw.getWindowsWithTitle("Chrome")
+        if chrome_windows:
+            # Lấy đúng cửa sổ Chrome và ra lệnh đóng
+            chrome_win = chrome_windows[0]
+            chrome_win.close()
+            time.sleep(0.3)
+            # Vượt qua popup nếu web có hộp thoại hỏi xác nhận rời trang
+            pyautogui.press('enter')
+            print("-> Đã đóng cửa sổ Chrome thành công.\n")
+        else:
+            print("-> Không tìm thấy cửa sổ Chrome nào đang mở.\n")
+    except Exception as e:
+        print(f"-> Gặp lỗi khi đóng cửa sổ Chrome: {e}\n")
+
+    # Trả lại focus cho cửa sổ Telegram Game
+    solid_click(1100, 300)
     time.sleep(0.3)
-
-    # # 2. Mở 1 tab mới đệm để Chrome không bao giờ bị tắt sổ
-    # pyautogui.hotkey('ctrl', 't')
-    # time.sleep(0.3)
-
-    # 3. Đóng đúng 3 tab quảng cáo phía trước
-    for _ in range(3):
-        # Bấm Ctrl + Shift + Tab để nhảy về tab quảng cáo bên trái
-        pyautogui.hotkey('ctrl', 'shift', 'tab')
-        time.sleep(0.15)
-        # Đóng tab đó
-        pyautogui.hotkey('ctrl', 'w')
-        time.sleep(0.15)
-        pyautogui.press('enter')  # Vượt popup Leave nếu có
-        time.sleep(0.15)
-
-    print("-> Đã đóng xong 3 tab quảng cáo và giữ lại 1 tab sạch.\n")
 
 def solid_click(x, y):
     """Click dứt khoát và giữ chuột nhẹ để nhận tương tác webapp."""
