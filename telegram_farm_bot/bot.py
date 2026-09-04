@@ -7,26 +7,40 @@ pyautogui.PAUSE = 0.2
 
 # --- HÀM CLICK CHẮC CHẮN (CHỐNG TRƯỢT/MẤT FOCUS) ---
 
+# def clean_chrome_tabs():
+#     """Chỉ đóng đúng cửa sổ Google Chrome, an toàn tuyệt đối."""
+#     print("\n--- TIẾN HÀNH ĐÓNG CỬA SỔ CHROME ---")
+
+#     try:
+#         chrome_windows = gw.getWindowsWithTitle("Chrome")
+#         if chrome_windows:
+#             # Lấy đúng cửa sổ Chrome và ra lệnh đóng
+#             chrome_win = chrome_windows[0]
+#             chrome_win.close()
+#             time.sleep(0.3)
+#             # Vượt qua popup nếu web có hộp thoại hỏi xác nhận rời trang
+#             pyautogui.press('enter')
+#             print("-> Đã đóng cửa sổ Chrome thành công.\n")
+#         else:
+#             print("-> Không tìm thấy cửa sổ Chrome nào đang mở.\n")
+#     except Exception as e:
+#         print(f"-> Gặp lỗi khi đóng cửa sổ Chrome: {e}\n")
+
+#     # Trả lại focus cho cửa sổ Telegram Game
+#     solid_click(1100, 300)
+#     time.sleep(0.3)
+import os
+
 def clean_chrome_tabs():
-    """Chỉ đóng đúng cửa sổ Google Chrome, an toàn tuyệt đối."""
+    """Đóng sạch cửa sổ Chrome ngay lập tức, bỏ qua mọi popup chặn."""
     print("\n--- TIẾN HÀNH ĐÓNG CỬA SỔ CHROME ---")
 
-    try:
-        chrome_windows = gw.getWindowsWithTitle("Chrome")
-        if chrome_windows:
-            # Lấy đúng cửa sổ Chrome và ra lệnh đóng
-            chrome_win = chrome_windows[0]
-            chrome_win.close()
-            time.sleep(0.3)
-            # Vượt qua popup nếu web có hộp thoại hỏi xác nhận rời trang
-            pyautogui.press('enter')
-            print("-> Đã đóng cửa sổ Chrome thành công.\n")
-        else:
-            print("-> Không tìm thấy cửa sổ Chrome nào đang mở.\n")
-    except Exception as e:
-        print(f"-> Gặp lỗi khi đóng cửa sổ Chrome: {e}\n")
+    # Ép đóng Chrome trên Windows mà không cần quan tâm popup alert
+    os.system("taskkill /f /im chrome.exe >nul 2>&1")
+    time.sleep(0.4)
+    print("-> Đã đóng sạch Chrome.\n")
 
-    # Trả lại focus cho cửa sổ Telegram Game
+    # Trả lại focus cho Telegram
     solid_click(1100, 300)
     time.sleep(0.3)
 
@@ -44,10 +58,12 @@ def solid_click(x, y):
     pyautogui.mouseUp()
     time.sleep(0.1)
 
-def wait_and_click(image_name, check_interval=0.6, confidence=0.65, grayscale=True):
-    """Tìm ảnh liên tục trên màn hình (vô hạn thời gian) cho đến khi thấy mới click và đi tiếp."""
-    print(f"-> Đang quét tìm: {image_name}...")
-    while True:
+def wait_and_click(image_name, check_interval=0.6, confidence=0.65, grayscale=True, timeout=5):
+    """Tìm ảnh trên màn hình tối đa 30s. Nếu thấy thì click và return True, quá 30s thì bỏ qua return False."""
+    print(f"-> Đang quét tìm: {image_name} (tối đa {timeout}s)...")
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
         try:
             pos = pyautogui.locateCenterOnScreen(image_name, confidence=confidence, grayscale=grayscale)
             if pos:
@@ -58,10 +74,16 @@ def wait_and_click(image_name, check_interval=0.6, confidence=0.65, grayscale=Tr
             pass
         time.sleep(check_interval + random.uniform(0.05, 0.15))
 
-def check_and_click_if_exists(image_name, check_interval=0.6, confidence=0.65, grayscale=True):
-    """Quét liên tục trên màn hình đến khi nào thấy nút mới click và hoàn thành."""
-    print(f"-> Đang tìm popup/nút: {image_name}...")
-    while True:
+    print(f"[BỎ QUA] Quá {timeout}s không tìm thấy: {image_name} -> Chuyển sang bước tiếp theo.")
+    return False
+
+
+def check_and_click_if_exists(image_name, check_interval=0.6, confidence=0.65, grayscale=True, timeout=5):
+    """Quét tìm nút/popup tối đa 30s. Nếu thấy thì click và return True, quá 30s thì bỏ qua return False."""
+    print(f"-> Đang tìm popup/nút: {image_name} (tối đa {timeout}s)...")
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
         try:
             pos = pyautogui.locateCenterOnScreen(image_name, confidence=confidence, grayscale=grayscale)
             if pos:
@@ -72,6 +94,9 @@ def check_and_click_if_exists(image_name, check_interval=0.6, confidence=0.65, g
         except Exception:
             pass
         time.sleep(check_interval + random.uniform(0.05, 0.15))
+
+    print(f"[BỎ QUA] Quá {timeout}s không thấy popup/nút: {image_name} -> Đi tiếp.")
+    return False
 
 
 # --- QUY TRÌNH FARM TAB ANIMAL ---
@@ -199,8 +224,8 @@ def run_animal_cycle():
     return True
 
 # --- BẮT ĐẦU CHẠY ---
-print("Bot sẽ chạy sau 5 giây. Hãy mở sẵn màn hình game!")
-time.sleep(5)
+print("Bot sẽ chạy sau 7 giây. Hãy mở sẵn màn hình game!")
+time.sleep(7)
 
 cycle_count = 0
 
